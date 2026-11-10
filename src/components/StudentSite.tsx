@@ -153,9 +153,8 @@ export default function StudentSite({
   const Finder = ({ compact = false }: { compact?: boolean }) => (
     <form
       onSubmit={submitFinder}
-      className={`rounded-2xl bg-white shadow-[0_18px_50px_rgba(4,30,55,0.14)] ${
-        compact ? "border border-[#e4e8ed] p-5" : "p-5 md:p-7"
-      }`}
+      className={`rounded-2xl bg-white shadow-[0_18px_50px_rgba(4,30,55,0.14)] ${compact ? "border border-[#e4e8ed] p-5" : "p-5 md:p-7"
+        }`}
     >
       <div className="mb-5 flex items-center gap-3">
         <div className="rounded-lg bg-[#f5ead0] p-2.5 text-[#936c18]">
@@ -293,9 +292,11 @@ export default function StudentSite({
       <header className="sticky top-0 z-40 border-b border-[#dfe4e9] bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <button onClick={() => navigate("home")} className="flex items-center gap-3 text-left">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0b2948] text-[#d5ad52]">
-              <GraduationCap className="h-6 w-6" />
-            </div>
+            <img
+              src="/nsuk-logo.svg"
+              alt="Nasarawa State University logo"
+              className="h-11 w-11 rounded-xl border border-[#dfe6ee] bg-white object-contain p-1 shadow-sm"
+            />
             <div>
               <div className="font-serif text-lg font-bold leading-tight text-[#0b2948]">
                 NSUK Resources
@@ -318,9 +319,8 @@ export default function StudentSite({
               <button
                 key={key}
                 onClick={() => navigate(key)}
-                className={`text-sm font-semibold transition ${
-                  page === key ? "text-[#a07824]" : "text-[#405267] hover:text-[#0b2948]"
-                }`}
+                className={`text-sm font-semibold transition ${page === key ? "text-[#a07824]" : "text-[#405267] hover:text-[#0b2948]"
+                  }`}
               >
                 {label}
               </button>

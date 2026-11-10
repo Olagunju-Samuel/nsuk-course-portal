@@ -152,9 +152,11 @@ export default function AdminPanel({
       >
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-[#d4af58] p-2 text-[#08243f]">
-              <GraduationCap className="h-5 w-5" />
-            </div>
+            <img
+              src="/nsuk-logo.svg"
+              alt="Nasarawa State University logo"
+              className="h-10 w-10 rounded-lg border border-white/10 bg-white object-contain p-1"
+            />
             <div>
               <p className="font-serif font-bold">NSUK Resources</p>
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#91a5b8]">
@@ -294,9 +296,11 @@ function AuthScreen({
     <div className="flex min-h-screen bg-[#f3f6f8]">
       <div className="hidden w-[44%] flex-col justify-between bg-[#08243f] p-12 text-white lg:flex">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-[#d4af58] p-3 text-[#08243f]">
-            <GraduationCap className="h-6 w-6" />
-          </div>
+          <img
+            src="/nsuk-logo.svg"
+            alt="Nasarawa State University logo"
+            className="h-12 w-12 rounded-xl border border-white/10 bg-white object-contain p-2"
+          />
           <div>
             <p className="font-serif text-xl font-bold">NSUK Resources</p>
             <p className="text-xs uppercase tracking-[0.16em] text-[#9eb1c2]">Administration</p>
