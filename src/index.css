@@ -48,12 +48,12 @@ html[data-theme="dark"] {
 
 html[data-theme="dark"] body {
   background: #101820;
-  color: #f5f8fc;
+  color: #dce5ee;
 }
 
 html[data-theme="dark"] [data-app-theme] {
   background-color: #101820 !important;
-  color: #f5f8fc;
+  color: #dce5ee;
 }
 
 html[data-theme="dark"] [class*="bg-white"],
@@ -63,20 +63,8 @@ html[data-theme="dark"] [class*="bg-[#d"] {
   background-color: #192635 !important;
 }
 
-html[data-theme="dark"] [class*="text-[#0b2948"],
-html[data-theme="dark"] [class*="text-[#102c48"],
-html[data-theme="dark"] [class*="text-[#102a45"],
-html[data-theme="dark"] [class*="text-[#132d48"],
-html[data-theme="dark"] [class*="text-[#17304a"],
-html[data-theme="dark"] [class*="text-[#182b40"],
-html[data-theme="dark"] [class*="text-[#24364b"],
-html[data-theme="dark"] [class*="text-[#243b52"],
-html[data-theme="dark"] [class*="text-[#263b51"],
-html[data-theme="dark"] [class*="text-[#35495e"],
-html[data-theme="dark"] [class*="text-[#405267"],
-html[data-theme="dark"] [class*="text-[#526274"],
-html[data-theme="dark"] [class*="text-[#536477"] {
-  color: #f5f8fc !important;
+html[data-theme="dark"] [class*="text-[#"] {
+  color: #f1f5f9 !important;
 }
 
 html[data-theme="dark"] [class*="text-[#a07824"],
@@ -94,22 +82,13 @@ html[data-theme="dark"] [data-dark-role="department-name"] {
 html[data-theme="dark"] [class*="text-[#7a8796"],
 html[data-theme="dark"] [class*="text-[#778495"],
 html[data-theme="dark"] [class*="text-[#758292"],
-html[data-theme="dark"] [class*="text-[#768494"],
-html[data-theme="dark"] [class*="text-[#718092"],
-html[data-theme="dark"] [class*="text-[#738091"],
-html[data-theme="dark"] [class*="text-[#7c8998"],
-html[data-theme="dark"] [class*="text-[#8fa0af"],
-html[data-theme="dark"] [class*="text-[#8c98a8"],
 html[data-theme="dark"] [class*="text-[#697789"],
 html[data-theme="dark"] [class*="text-[#6b7888"],
 html[data-theme="dark"] [class*="text-[#657386"],
 html[data-theme="dark"] [class*="text-[#667588"],
 html[data-theme="dark"] [class*="text-[#687789"],
-html[data-theme="dark"] [class*="text-[#8290a0"],
-html[data-theme="dark"] [class*="text-[#5f6e80"],
-html[data-theme="dark"] [class*="text-[#5f6f81"],
-html[data-theme="dark"] [class*="text-[#6d7b8b"] {
-  color: #d5e0ec !important;
+html[data-theme="dark"] [class*="text-[#8290a0"] {
+  color: #bdcbd9 !important;
 }
 
 html[data-theme="dark"] [class*="border-[#"] {

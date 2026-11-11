@@ -18,6 +18,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Trash2,
   Settings as SettingsIcon,
   Sun,
   Upload,
@@ -536,6 +537,29 @@ function Faculties({ data, refresh, notify }: AdminProps) {
                 <Button variant="ghost" onClick={() => setEditing(item)}>
                   <Pencil className="h-4 w-4" /> Edit
                 </Button>
+                <Button
+                  variant="ghost"
+                  className="text-red-700 hover:bg-red-50"
+                  onClick={async () => {
+                    const relatedCourses = data.courses.filter((course) => course.departmentId === item.id);
+                    const relatedOfferings = data.offerings.filter((offering) =>
+                      relatedCourses.some((course) => course.id === offering.courseId),
+                    );
+                    const relatedResources = data.resources.filter((resource) =>
+                      relatedOfferings.some((offering) => offering.id === resource.offeringId),
+                    );
+                    if (!window.confirm(`Permanently delete ${item.name}? This also deletes ${relatedCourses.length} course(s), ${relatedOfferings.length} offering(s), and ${relatedResources.length} PDF(s). This cannot be undone.`)) return;
+                    try {
+                      await api.remove("departments", item.id);
+                      notify("Department and its associated courses and PDFs were deleted.");
+                      await refresh();
+                    } catch (error) {
+                      notify(errorMessage(error), "error");
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </Button>
               </Cell>
             </tr>
           ))}
@@ -1037,6 +1061,24 @@ function Courses({ data, refresh, notify }: AdminProps) {
                   }}
                 >
                   <Archive className="h-4 w-4" /> Archive
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-red-700 hover:bg-red-50"
+                  onClick={async () => {
+                    const relatedOfferings = data.offerings.filter((offering) => offering.courseId === item.course.id);
+                    const resourceCount = data.resources.filter((resource) => relatedOfferings.some((offering) => offering.id === resource.offeringId)).length;
+                    if (!window.confirm(`Permanently delete ${item.course.code}? This removes ${relatedOfferings.length} offering(s) and ${resourceCount} uploaded PDF(s). This cannot be undone.`)) return;
+                    try {
+                      await api.remove("courses", item.course.id);
+                      notify("Course, offerings, and associated PDFs were deleted.");
+                      await refresh();
+                    } catch (error) {
+                      notify(errorMessage(error), "error");
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               </Cell>
             </tr>
@@ -1593,6 +1635,23 @@ function Resources({ data, refresh, notify }: AdminProps) {
                         aria-label="Edit resource"
                       >
                         <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="text-red-700 hover:bg-red-50"
+                        onClick={async () => {
+                          if (!window.confirm(`Permanently delete “${item.title}” and its uploaded PDF? This cannot be undone.`)) return;
+                          try {
+                            await api.remove("resources", item.id);
+                            notify("PDF resource deleted.");
+                            await refresh();
+                          } catch (error) {
+                            notify(errorMessage(error), "error");
+                          }
+                        }}
+                        aria-label="Delete PDF resource"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </Cell>

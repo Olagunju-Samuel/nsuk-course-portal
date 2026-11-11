@@ -84,6 +84,8 @@ export const api = {
     ),
   archive: (entity: string, id: string) =>
     request(`/admin/${entity}/${id}/archive`, { method: "POST" }, true),
+  remove: (entity: string, id: string) =>
+    request(`/admin/${entity}/${id}`, { method: "DELETE" }, true),
   upload: (form: FormData) =>
     request<{ resource: unknown }>(
       "/admin/resources/upload",

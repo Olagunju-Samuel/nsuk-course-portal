@@ -541,6 +541,59 @@ app.post(`${prefix}/admin/:entity/:id/archive`, async (c) => {
   return c.json({ value });
 });
 
+app.delete(`${prefix}/admin/:entity/:id`, async (c) => {
+  const entity = c.req.param("entity");
+  const recordId = c.req.param("id");
+  if (!["resources", "courses", "departments"].includes(entity)) {
+    return c.json({ error: "Only PDF resources, courses, and departments can be deleted here." }, 400);
+  }
+
+  const record = await get(entity, recordId);
+  if (!record) return c.json({ error: "Record not found." }, 404);
+  const resources = await all("resources");
+  const offerings = await all("offerings");
+  const courses = await all("courses");
+  const departmentCourses = entity === "departments"
+    ? courses.filter((course: any) => course.departmentId === recordId)
+    : entity === "courses" ? [record] : [];
+  const courseIds = new Set(departmentCourses.map((course: any) => course.id));
+  const offeringIds = new Set(
+    entity === "resources"
+      ? []
+      : offerings.filter((offering: any) => courseIds.has(offering.courseId)).map((offering: any) => offering.id),
+  );
+  const resourcesToDelete = entity === "resources"
+    ? [record]
+    : resources.filter((resource: any) => offeringIds.has(resource.offeringId));
+
+  if (resourcesToDelete.length) {
+    const paths = resourcesToDelete.map((resource: any) => resource.filePath).filter(Boolean);
+    if (paths.length) {
+      const { error } = await client().storage.from(bucket).remove(paths);
+      if (error) return c.json({ error: `Could not delete stored PDF files: ${error.message}` }, 500);
+    }
+  }
+
+  try {
+    for (const resource of resourcesToDelete) await kv.del(`resources:${resource.id}`);
+    for (const offeringId of offeringIds) await kv.del(`offerings:${offeringId}`);
+    for (const course of departmentCourses) await kv.del(`courses:${course.id}`);
+    if (entity === "departments") await kv.del(`departments:${recordId}`);
+    if (entity === "courses") await kv.del(`courses:${recordId}`);
+    if (entity === "resources") await kv.del(`resources:${recordId}`);
+  } catch (error) {
+    console.error(`Failed to delete ${entity}:${recordId}:`, error);
+    return c.json({ error: "Deletion was incomplete. Refresh the admin page and check the record state." }, 500);
+  }
+
+  return c.json({
+    deleted: true,
+    resources: resourcesToDelete.length,
+    courses: departmentCourses.length,
+    offerings: offeringIds.size,
+  });
+});
+
 app.post(`${prefix}/admin/resources/upload`, async (c) => {
   const form = await c.req.formData();
   const file = form.get("file");
