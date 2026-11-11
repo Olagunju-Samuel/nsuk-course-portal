@@ -1098,6 +1098,7 @@ function CourseForm({
   const [course, setCourse] = useState<Partial<Course>>(
     courseValue || { facultyId: initialFaculty, departmentId: "", status: "active" },
   );
+  const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<string[]>([]);
   const [offering, setOffering] = useState<Partial<Offering>>(
     value
       ? {
@@ -1126,8 +1127,19 @@ function CourseForm({
       item.facultyId === course.facultyId &&
       (item.status === "active" || item.id === course.departmentId),
   );
+  const activeFacultyIds = new Set(
+    data.faculties.filter((item) => item.status === "active").map((item) => item.id),
+  );
+  const activeDepartments = data.departments.filter(
+    (item) => item.status === "active" && activeFacultyIds.has(item.facultyId),
+  );
+  const multiDepartmentCreation = !value;
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    if (multiDepartmentCreation && selectedDepartmentIds.length === 0) {
+      notify("Select at least one department for this course.", "error");
+      return;
+    }
     if (
       value &&
       value.publicationStatus !== "archived" &&
@@ -1139,8 +1151,61 @@ function CourseForm({
       return;
     setBusy(true);
     try {
-      await api.saveCourseOffering(course, offering);
-      notify("Course and offering saved successfully.");
+      if (multiDepartmentCreation) {
+        const failures: string[] = [];
+        let savedCount = 0;
+        let existingCount = 0;
+        for (const departmentId of selectedDepartmentIds) {
+          const department = activeDepartments.find((item) => item.id === departmentId);
+          if (!department) continue;
+          const matchingCourse = data.courses.find(
+            (item) =>
+              item.departmentId === department.id &&
+              item.code.trim().toLowerCase() === String(course.code || "").trim().toLowerCase(),
+          );
+          const matchingOffering = matchingCourse && data.offerings.some(
+            (item) =>
+              item.courseId === matchingCourse.id &&
+              item.academicSessionId === offering.academicSessionId &&
+              item.level === offering.level &&
+              item.semester === offering.semester,
+          );
+          if (matchingOffering) {
+            existingCount += 1;
+            continue;
+          }
+          try {
+            await api.saveCourseOffering(
+              {
+                ...course,
+                ...(matchingCourse ? { id: matchingCourse.id } : {}),
+                facultyId: department.facultyId,
+                departmentId: department.id,
+              },
+              offering,
+            );
+            savedCount += 1;
+          } catch (error) {
+            failures.push(`${department.name}: ${errorMessage(error)}`);
+          }
+        }
+        if (failures.length) {
+          const completedCount = savedCount + existingCount;
+          notify(
+            `${savedCount} new offerings saved; ${existingCount} already existed, out of ${selectedDepartmentIds.length} selected. ${failures.join("; ")}`,
+            "error",
+          );
+          if (completedCount) onSaved();
+          return;
+        }
+        const totalCount = savedCount + existingCount;
+        notify(
+          `Course is available in ${totalCount} department${totalCount === 1 ? "" : "s"}.${existingCount ? ` ${existingCount} existing offering${existingCount === 1 ? " was" : "s were"} left unchanged.` : ""}`,
+        );
+      } else {
+        await api.saveCourseOffering(course, offering);
+        notify("Course offering saved successfully.");
+      }
       onSaved();
     } catch (error) {
       notify(errorMessage(error), "error");
@@ -1171,39 +1236,108 @@ function CourseForm({
                 onChange={(e) => setCourse({ ...course, title: e.target.value })}
               />
             </Field>
-            <Field label="Faculty">
-              <Select
-                required
-                value={course.facultyId || ""}
-                disabled={addingOffering}
-                onChange={(e) =>
-                  setCourse({ ...course, facultyId: e.target.value, departmentId: "" })
-                }
-              >
-                {data.faculties
-                  .filter((item) => item.status === "active" || item.id === course.facultyId)
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-              </Select>
-            </Field>
-            <Field label="Department">
-              <Select
-                required
-                value={course.departmentId || ""}
-                disabled={addingOffering}
-                onChange={(e) => setCourse({ ...course, departmentId: e.target.value })}
-              >
-                <option value="">Select department</option>
-                {departments.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+            {multiDepartmentCreation ? (
+              <div className="sm:col-span-2">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-[#24364b]">Departments</span>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setSelectedDepartmentIds(activeDepartments.map((item) => item.id))}
+                    >
+                      Select all departments
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={() => setSelectedDepartmentIds([])}>
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+                <p className="mb-3 text-xs text-[#697789]">
+                  Select every department that offers this course. One offering will be created for each selection.
+                </p>
+                <div className="max-h-64 space-y-4 overflow-y-auto rounded-lg border border-[#d8dee6] p-3">
+                  {data.faculties
+                    .filter((faculty) => faculty.status === "active")
+                    .map((faculty) => {
+                      const facultyDepartments = activeDepartments.filter(
+                        (department) => department.facultyId === faculty.id,
+                      );
+                      if (!facultyDepartments.length) return null;
+                      return (
+                        <section key={faculty.id}>
+                          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#697789]">
+                            {faculty.name}
+                          </h4>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {facultyDepartments.map((department) => (
+                              <label
+                                key={department.id}
+                                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-[#f3f6f8]"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedDepartmentIds.includes(department.id)}
+                                  onChange={(event) =>
+                                    setSelectedDepartmentIds((selected) =>
+                                      event.target.checked
+                                        ? [...selected, department.id]
+                                        : selected.filter((id) => id !== department.id),
+                                    )
+                                  }
+                                />
+                                {department.name}
+                              </label>
+                            ))}
+                          </div>
+                        </section>
+                      );
+                    })}
+                  {!activeDepartments.length && (
+                    <p className="text-sm text-[#697789]">No active departments are available.</p>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-[#697789]">
+                  {selectedDepartmentIds.length} department{selectedDepartmentIds.length === 1 ? "" : "s"} selected
+                </p>
+              </div>
+            ) : (
+              <>
+                <Field label="Faculty">
+                  <Select
+                    required
+                    value={course.facultyId || ""}
+                    disabled={addingOffering}
+                    onChange={(e) =>
+                      setCourse({ ...course, facultyId: e.target.value, departmentId: "" })
+                    }
+                  >
+                    {data.faculties
+                      .filter((item) => item.status === "active" || item.id === course.facultyId)
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                  </Select>
+                </Field>
+                <Field label="Department">
+                  <Select
+                    required
+                    value={course.departmentId || ""}
+                    disabled={addingOffering}
+                    onChange={(e) => setCourse({ ...course, departmentId: e.target.value })}
+                  >
+                    <option value="">Select department</option>
+                    {departments.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </>
+            )}
           </div>
           <div className="mt-4">
             <Field label="Course description (optional)">
