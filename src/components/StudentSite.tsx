@@ -150,142 +150,144 @@ export default function StudentSite({
     }
   }
 
-  const Finder = ({ compact = false }: { compact?: boolean }) => (
-    <form
-      onSubmit={submitFinder}
-      className={`rounded-2xl bg-white shadow-[0_18px_50px_rgba(4,30,55,0.14)] ${compact ? "border border-[#e4e8ed] p-5" : "p-5 md:p-7"
-        }`}
-    >
-      <div className="mb-5 flex items-center gap-3">
-        <div className="rounded-lg bg-[#f5ead0] p-2.5 text-[#936c18]">
-          <Search className="h-5 w-5" />
+  function renderFinder(compact = false) {
+    return (
+      <form
+        onSubmit={submitFinder}
+        className={`rounded-2xl bg-white shadow-[0_18px_50px_rgba(4,30,55,0.14)] ${compact ? "border border-[#e4e8ed] p-5" : "p-5 md:p-7"
+          }`}
+      >
+        <div className="mb-5 flex items-center gap-3">
+          <div className="rounded-lg bg-[#f5ead0] p-2.5 text-[#936c18]">
+            <Search className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="font-serif text-xl font-bold text-[#0b2948]">
+              Find your course materials
+            </h2>
+            <p className="text-sm text-[#697789]">
+              Choose any filters; matching course data updates automatically.
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="font-serif text-xl font-bold text-[#0b2948]">
-            Find your course materials
-          </h2>
-          <p className="text-sm text-[#697789]">
-            Choose any filters; matching course data updates automatically.
-          </p>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Field label="Faculty">
+            <Select
+              value={filters.facultyId}
+              onChange={(event) =>
+                setFilters({
+                  ...filters,
+                  facultyId: event.target.value,
+                  departmentId: "",
+                })
+              }
+            >
+              <option value="">All faculties</option>
+              {data.faculties.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Department">
+            <Select
+              disabled={!filters.facultyId}
+              value={filters.departmentId}
+              onChange={(event) => setFilters({ ...filters, departmentId: event.target.value })}
+            >
+              <option value="">All departments</option>
+              {filteredDepartments.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Level">
+            <Select
+              value={filters.level}
+              onChange={(event) => setFilters({ ...filters, level: event.target.value })}
+            >
+              <option value="">All levels</option>
+              {data.settings.levels.map((level) => (
+                <option key={level}>{level}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Semester">
+            <Select
+              value={filters.semester}
+              onChange={(event) => setFilters({ ...filters, semester: event.target.value })}
+            >
+              <option value="">All semesters</option>
+              {data.settings.semesters.map((semester) => (
+                <option key={semester}>{semester}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Academic session">
+            <Select
+              value={filters.sessionId}
+              onChange={(event) => setFilters({ ...filters, sessionId: event.target.value })}
+            >
+              <option value="">All sessions</option>
+              {data.sessions.map((session) => (
+                <option key={session.id} value={session.id}>
+                  {session.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
         </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Field label="Faculty">
-          <Select
-            value={filters.facultyId}
-            onChange={(event) =>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <Field label="Search courses, resources, or departments">
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Course code, title, PDF title, or department"
+            />
+          </Field>
+          <Field label="Resource type">
+            <Select
+              value={resourceCategory}
+              onChange={(event) => setResourceCategory(event.target.value)}
+            >
+              <option value="">All resource types</option>
+              {Object.entries(categoryLabels).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Button type="submit">
+            Browse matching courses <ArrowRight className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
               setFilters({
-                ...filters,
-                facultyId: event.target.value,
+                facultyId: "",
                 departmentId: "",
-              })
-            }
+                level: "",
+                semester: "",
+                sessionId: "",
+              });
+              setSearched(false);
+              setQuery("");
+              setResourceCategory("");
+            }}
           >
-            <option value="">All faculties</option>
-            {data.faculties.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Department">
-          <Select
-            disabled={!filters.facultyId}
-            value={filters.departmentId}
-            onChange={(event) => setFilters({ ...filters, departmentId: event.target.value })}
-          >
-            <option value="">All departments</option>
-            {filteredDepartments.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Level">
-          <Select
-            value={filters.level}
-            onChange={(event) => setFilters({ ...filters, level: event.target.value })}
-          >
-            <option value="">All levels</option>
-            {data.settings.levels.map((level) => (
-              <option key={level}>{level}</option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Semester">
-          <Select
-            value={filters.semester}
-            onChange={(event) => setFilters({ ...filters, semester: event.target.value })}
-          >
-            <option value="">All semesters</option>
-            {data.settings.semesters.map((semester) => (
-              <option key={semester}>{semester}</option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Academic session">
-          <Select
-            value={filters.sessionId}
-            onChange={(event) => setFilters({ ...filters, sessionId: event.target.value })}
-          >
-            <option value="">All sessions</option>
-            {data.sessions.map((session) => (
-              <option key={session.id} value={session.id}>
-                {session.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      </div>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <Field label="Search courses, resources, or departments">
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Course code, title, PDF title, or department"
-          />
-        </Field>
-        <Field label="Resource type">
-          <Select
-            value={resourceCategory}
-            onChange={(event) => setResourceCategory(event.target.value)}
-          >
-            <option value="">All resource types</option>
-            {Object.entries(categoryLabels).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      </div>
-      <div className="mt-5 flex flex-wrap gap-3">
-        <Button type="submit">
-          Browse matching courses <ArrowRight className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => {
-            setFilters({
-              facultyId: "",
-              departmentId: "",
-              level: "",
-              semester: "",
-              sessionId: "",
-            });
-            setSearched(false);
-            setQuery("");
-            setResourceCategory("");
-          }}
-        >
-          Reset
-        </Button>
-      </div>
-    </form>
-  );
+            Reset
+          </Button>
+        </div>
+      </form>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f7f8fa] text-[#182b40]">
@@ -376,7 +378,7 @@ export default function StudentSite({
                   </p>
                 </div>
                 <div className="relative z-10 mt-10 md:mb-[-150px]">
-                  <Finder />
+                  {renderFinder()}
                   {loading ? (
                     <p className="mt-3 flex items-center gap-2 text-sm text-white/80" role="status">
                       <LoaderCircle className="h-4 w-4 animate-spin" /> Loading live academic
@@ -565,7 +567,7 @@ export default function StudentSite({
                 Search published course offerings and the verified resources attached to them.
               </p>
             </div>
-            <Finder compact />
+            {renderFinder(true)}
             {error && (
               <div
                 role="alert"
