@@ -1543,7 +1543,7 @@ function ResourceForm({
     courseId: initialOffering?.course.id || "",
     sessionId: initialOffering?.session.id || "",
   });
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const departments = data.departments.filter((item) => item.facultyId === academic.facultyId);
@@ -1564,12 +1564,13 @@ function ResourceForm({
   const canPublish = current?.publicationStatus === "published";
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!value && !file) return notify("Select a PDF file to upload.", "error");
+    if (!value && !files.length) return notify("Select at least one PDF file to upload.", "error");
     if (!current) return notify("Select a valid faculty, department, level, semester, course, and academic session.", "error");
-    if (file && (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")))
+    if (files.some((file) => file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")))
       return notify("Only PDF files are accepted.", "error");
-    if (file && file.size > data.settings.maxFileSizeMb * 1024 * 1024)
-      return notify(`The file exceeds ${data.settings.maxFileSizeMb} MB.`, "error");
+    const oversizedFile = files.find((file) => file.size > data.settings.maxFileSizeMb * 1024 * 1024);
+    if (oversizedFile)
+      return notify(`${oversizedFile.name} exceeds ${data.settings.maxFileSizeMb} MB.`, "error");
     if (
       value &&
       value.publicationStatus !== "archived" &&
@@ -1580,21 +1581,41 @@ function ResourceForm({
     )
       return;
     setBusy(true);
-    setProgress(15);
+    setProgress(0);
     try {
-      if (file) {
-        const payload = new FormData();
-        Object.entries(form).forEach(([key, val]) => payload.append(key, String(val)));
-        payload.append("offeringId", current.id);
-        if (value) payload.append("resourceId", value.id);
-        payload.append("file", file);
-        setProgress(45);
-        await api.upload(payload);
-        setProgress(100);
+      if (files.length) {
+        const failures: string[] = [];
+        let uploaded = 0;
+        for (const [index, file] of files.entries()) {
+          const payload = new FormData();
+          const resourceTitle = files.length > 1
+            ? file.name.replace(/\.pdf$/i, "")
+            : form.title;
+          Object.entries({ ...form, title: resourceTitle }).forEach(([key, val]) =>
+            payload.append(key, String(val)),
+          );
+          payload.append("offeringId", current.id);
+          if (value) payload.append("resourceId", value.id);
+          payload.append("file", file);
+          try {
+            await api.upload(payload);
+            uploaded += 1;
+          } catch (error) {
+            failures.push(`${file.name}: ${errorMessage(error)}`);
+          }
+          setProgress(Math.round(((index + 1) / files.length) * 100));
+        }
+        if (failures.length) {
+          const message = `${uploaded} of ${files.length} PDFs uploaded.${uploaded ? " " : ""}${failures.join("; ")}`;
+          notify(message, "error");
+          if (uploaded) onSaved();
+          return;
+        }
+        notify(`${uploaded} PDF${uploaded === 1 ? "" : "s"} uploaded successfully.`);
       } else if (value) {
         await api.save("resources", { ...value, ...form });
       }
-      notify(value ? "Resource updated successfully." : "PDF uploaded successfully.");
+      if (value) notify("Resource updated successfully.");
       onSaved();
     } catch (error) {
       notify(errorMessage(error), "error");
@@ -1675,9 +1696,10 @@ function ResourceForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Resource title">
             <Input
-              required
+              required={!files.length || files.length === 1}
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder={files.length > 1 ? "Each PDF will use its filename as the title" : "e.g. Week 1 lecture notes"}
             />
           </Field>
           <Field
@@ -1750,16 +1772,25 @@ function ResourceForm({
           </Field>
         </div>
         <Field
-          label={value ? "Replace PDF file (optional)" : "PDF file"}
-          hint={`PDF only, maximum ${data.settings.maxFileSizeMb} MB. ${value ? `Current file: ${value.fileName}` : ""}`}
+          label={value ? "Replace PDF file (optional)" : "PDF file(s)"}
+          hint={`PDF only, maximum ${data.settings.maxFileSizeMb} MB per file. Select multiple PDFs to upload them together; each will use its filename as its resource title. ${value ? `Current file: ${value.fileName}` : ""}`}
         >
           <Input
             required={!value}
             type="file"
             accept="application/pdf,.pdf"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            multiple={!value}
+            onChange={(e) => setFiles(Array.from(e.target.files || []))}
           />
         </Field>
+        {!value && files.length > 1 && (
+          <div className="rounded-lg border border-[#e5e9ee] bg-[#f8fafb] p-3 text-sm">
+            <p className="mb-2 font-semibold">{files.length} PDFs selected</p>
+            <ul className="list-inside list-disc space-y-1 text-[#657386]">
+              {files.map((file) => <li key={`${file.name}-${file.lastModified}`}>{file.name}</li>)}
+            </ul>
+          </div>
+        )}
         {busy && (
           <div>
             <div className="mb-1 flex justify-between text-xs font-semibold text-[#657386]">
@@ -1777,7 +1808,7 @@ function ResourceForm({
         <FormActions
           onClose={onClose}
           busy={busy}
-          label={file ? "Upload and save" : "Save metadata"}
+          label={files.length ? `Upload ${files.length > 1 ? `${files.length} PDFs` : "PDF"}` : "Save metadata"}
         />
       </form>
     </Modal>
