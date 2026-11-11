@@ -1736,6 +1736,7 @@ function ResourceForm({
     courseId: initialOffering?.course.id || "",
     sessionId: initialOffering?.session.id || "",
   });
+  const [selectedOfferingIds, setSelectedOfferingIds] = useState<string[] | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -1754,11 +1755,28 @@ function ResourceForm({
     (item) => item.level === academic.level && item.semester === academic.semester && item.course.id === academic.courseId,
   );
   const current = availableOfferings.find((item) => item.session.id === academic.sessionId);
-  const canPublish = current?.publicationStatus === "published";
+  const matchingCourseOfferings = current
+    ? offerings.filter(
+      (item) =>
+        item.course.code.toLowerCase() === current.course.code.toLowerCase() &&
+        item.level === current.level &&
+        item.semester === current.semester &&
+        item.session.id === current.session.id,
+    )
+    : [];
+  const effectiveSelectedOfferingIds =
+    selectedOfferingIds ?? (current ? [current.id] : []);
+  const selectedOfferings = matchingCourseOfferings.filter((item) =>
+    effectiveSelectedOfferingIds.includes(item.id),
+  );
+  const canPublish =
+    selectedOfferings.length > 0 &&
+    selectedOfferings.every((item) => item.publicationStatus === "published");
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!value && !files.length) return notify("Select at least one PDF file to upload.", "error");
     if (!current) return notify("Select a valid faculty, department, level, semester, course, and academic session.", "error");
+    if (!value && !selectedOfferings.length) return notify("Select at least one department offering for this PDF.", "error");
     if (files.some((file) => file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")))
       return notify("Only PDF files are accepted.", "error");
     const oversizedFile = files.find((file) => file.size > data.settings.maxFileSizeMb * 1024 * 1024);
@@ -1779,32 +1797,36 @@ function ResourceForm({
       if (files.length) {
         const failures: string[] = [];
         let uploaded = 0;
-        for (const [index, file] of files.entries()) {
-          const payload = new FormData();
-          const resourceTitle = files.length > 1
-            ? file.name.replace(/\.pdf$/i, "")
-            : form.title;
-          Object.entries({ ...form, title: resourceTitle }).forEach(([key, val]) =>
-            payload.append(key, String(val)),
-          );
-          payload.append("offeringId", current.id);
-          if (value) payload.append("resourceId", value.id);
-          payload.append("file", file);
-          try {
-            await api.upload(payload);
-            uploaded += 1;
-          } catch (error) {
-            failures.push(`${file.name}: ${errorMessage(error)}`);
+        const targets = value ? [current] : selectedOfferings;
+        const totalUploads = files.length * targets.length;
+        let completedUploads = 0;
+        for (const file of files) {
+          const resourceTitle = files.length > 1 ? file.name.replace(/\.pdf$/i, "") : form.title;
+          for (const target of targets) {
+            const payload = new FormData();
+            Object.entries({ ...form, title: resourceTitle }).forEach(([key, val]) =>
+              payload.append(key, String(val)),
+            );
+            payload.append("offeringId", target.id);
+            if (value) payload.append("resourceId", value.id);
+            payload.append("file", file);
+            try {
+              await api.upload(payload);
+              uploaded += 1;
+            } catch (error) {
+              failures.push(`${file.name} → ${target.department.name}: ${errorMessage(error)}`);
+            }
+            completedUploads += 1;
+            setProgress(Math.round((completedUploads / totalUploads) * 100));
           }
-          setProgress(Math.round(((index + 1) / files.length) * 100));
         }
         if (failures.length) {
-          const message = `${uploaded} of ${files.length} PDFs uploaded.${uploaded ? " " : ""}${failures.join("; ")}`;
+          const message = `${uploaded} of ${totalUploads} PDF-to-department uploads succeeded. ${failures.join("; ")}`;
           notify(message, "error");
           if (uploaded) onSaved();
           return;
         }
-        notify(`${uploaded} PDF${uploaded === 1 ? "" : "s"} uploaded successfully.`);
+        notify(`${files.length} PDF${files.length === 1 ? "" : "s"} uploaded to ${targets.length} department${targets.length === 1 ? "" : "s"}.`);
       } else if (value) {
         await api.save("resources", { ...value, ...form });
       }
@@ -1830,36 +1852,85 @@ function ResourceForm({
               </Select>
             </Field>
             <Field label="Department">
-              <Select required disabled={Boolean(value) || !academic.facultyId} value={academic.departmentId} onChange={(e) => setAcademic({ ...academic, departmentId: e.target.value, level: "", semester: "", courseId: "", sessionId: "" })}>
+              <Select required disabled={Boolean(value) || !academic.facultyId} value={academic.departmentId} onChange={(e) => { setAcademic({ ...academic, departmentId: e.target.value, level: "", semester: "", courseId: "", sessionId: "" }); setSelectedOfferingIds(null); }}>
                 <option value="">Select department</option>
                 {departments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
               </Select>
             </Field>
             <Field label="Academic level">
-              <Select required disabled={Boolean(value) || !academic.departmentId} value={academic.level} onChange={(e) => setAcademic({ ...academic, level: e.target.value, semester: "", courseId: "", sessionId: "" })}>
+              <Select required disabled={Boolean(value) || !academic.departmentId} value={academic.level} onChange={(e) => { setAcademic({ ...academic, level: e.target.value, semester: "", courseId: "", sessionId: "" }); setSelectedOfferingIds(null); }}>
                 <option value="">Select level</option>
                 {levels.map((item) => <option key={item}>{item}</option>)}
               </Select>
             </Field>
             <Field label="Semester">
-              <Select required disabled={Boolean(value) || !academic.level} value={academic.semester} onChange={(e) => setAcademic({ ...academic, semester: e.target.value, courseId: "", sessionId: "" })}>
+              <Select required disabled={Boolean(value) || !academic.level} value={academic.semester} onChange={(e) => { setAcademic({ ...academic, semester: e.target.value, courseId: "", sessionId: "" }); setSelectedOfferingIds(null); }}>
                 <option value="">Select semester</option>
                 {semesters.map((item) => <option key={item}>{item}</option>)}
               </Select>
             </Field>
             <Field label="Course">
-              <Select required disabled={Boolean(value) || !academic.semester} value={academic.courseId} onChange={(e) => setAcademic({ ...academic, courseId: e.target.value, sessionId: "" })}>
+              <Select required disabled={Boolean(value) || !academic.semester} value={academic.courseId} onChange={(e) => { setAcademic({ ...academic, courseId: e.target.value, sessionId: "" }); setSelectedOfferingIds(null); }}>
                 <option value="">Select course</option>
                 {courses.map((item) => <option key={item.id} value={item.id}>{item.code} — {item.title}</option>)}
               </Select>
             </Field>
             <Field label="Academic session / year">
-              <Select required disabled={Boolean(value) || !academic.courseId} value={academic.sessionId} onChange={(e) => setAcademic({ ...academic, sessionId: e.target.value })}>
+              <Select required disabled={Boolean(value) || !academic.courseId} value={academic.sessionId} onChange={(e) => { setAcademic({ ...academic, sessionId: e.target.value }); setSelectedOfferingIds(null); }}>
                 <option value="">Select session</option>
                 {availableOfferings.map((item) => <option key={item.session.id} value={item.session.id}>{item.session.name}</option>)}
               </Select>
             </Field>
           </div>
+          {!value && current && matchingCourseOfferings.length > 1 && (
+            <div className="mt-4 rounded-lg border border-[#d8dee6] p-4">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h4 className="text-sm font-bold">Departments to receive these PDFs</h4>
+                  <p className="mt-1 text-xs text-[#697789]">
+                    Select departments that offer {current.course.code} in the same level, semester, and session.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setSelectedOfferingIds(matchingCourseOfferings.map((item) => item.id))}
+                  >
+                    Select all
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => setSelectedOfferingIds([])}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {matchingCourseOfferings.map((item) => (
+                  <label key={item.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-[#f3f6f8]">
+                    <input
+                      type="checkbox"
+                      checked={effectiveSelectedOfferingIds.includes(item.id)}
+                      onChange={(event) => {
+                        const selected = effectiveSelectedOfferingIds;
+                        setSelectedOfferingIds(
+                          event.target.checked
+                            ? [...selected, item.id]
+                            : selected.filter((id) => id !== item.id),
+                        );
+                      }}
+                    />
+                    <span>{item.department.name}</span>
+                    {item.publicationStatus !== "published" && (
+                      <span className="text-xs text-[#a16207]">(course unpublished)</span>
+                    )}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-[#697789]">
+                {selectedOfferings.length} department{selectedOfferings.length === 1 ? "" : "s"} selected
+              </p>
+            </div>
+          )}
           {!value && academic.courseId && !availableOfferings.length && (
             <p className="text-sm text-amber-800">This course has no offering for the selected level and semester. Add its offering under Courses before uploading resources.</p>
           )}
