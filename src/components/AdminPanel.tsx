@@ -2238,6 +2238,12 @@ function CsvImport({
 function SettingsPage({ data, refresh, notify }: AdminProps) {
   const [form, setForm] = useState({
     ...data.settings,
+    siteName: ["NSUK Academic Resources", "NSUK Resources"].includes(data.settings.siteName)
+      ? "NSUK Edu-Archive"
+      : data.settings.siteName,
+    copyrightText: data.settings.copyrightText === "Nasarawa State University academic resource platform."
+      ? "NSUK Edu-Archive."
+      : data.settings.copyrightText,
     levelsText: data.settings.levels.join(", "),
     semestersText: data.settings.semesters.join("\n"),
   });

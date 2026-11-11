@@ -25,7 +25,7 @@ const defaultSettings = {
   address: "Nasarawa State University, Keffi, Nigeria",
   privacyText:
     "Academic resources are provided for educational use. Availability and accuracy depend on materials verified and published by authorized administrators.",
-  copyrightText: "Nasarawa State University academic resource platform.",
+  copyrightText: "NSUK Edu-Archive.",
   levels: ["100", "200", "300", "400", "500"],
   semesters: ["First semester", "Second semester"],
   maxFileSizeMb: 25,

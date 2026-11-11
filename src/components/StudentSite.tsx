@@ -777,7 +777,7 @@ export default function StudentSite({
           <div>
             <h2 className="font-serif text-xl font-bold text-white">NSUK Edu-Archive</h2>
             <p className="mt-3 text-sm leading-6">
-              A focused academic resource platform for Nasarawa State University, Keffi.
+              NSUK Edu-Archive is a focused academic archive for students of Nasarawa State University, Keffi.
             </p>
           </div>
           <div>
