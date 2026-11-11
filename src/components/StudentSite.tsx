@@ -308,7 +308,7 @@ export default function StudentSite({
             />
             <div>
               <div className="font-serif text-lg font-bold leading-tight text-[#0b2948]">
-                NSUK Resources
+                NSUK Edu-Archive
               </div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7a8796]">
                 Academic Library
@@ -727,7 +727,7 @@ export default function StudentSite({
         {page === "about" && (
           <StaticPage title="About this resource platform">
             <p>
-              NSUK Academic Resources helps students locate course outlines, lecture notes, reading
+              NSUK Edu-Archive helps students locate course outlines, lecture notes, reading
               materials and past examination questions before lectures and examinations.
             </p>
             <p>
@@ -775,7 +775,7 @@ export default function StudentSite({
       <footer className="bg-[#071f36] text-[#c2cfda]">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-3 lg:px-8">
           <div>
-            <h2 className="font-serif text-xl font-bold text-white">NSUK Resources</h2>
+            <h2 className="font-serif text-xl font-bold text-white">NSUK Edu-Archive</h2>
             <p className="mt-3 text-sm leading-6">
               A focused academic resource platform for Nasarawa State University, Keffi.
             </p>

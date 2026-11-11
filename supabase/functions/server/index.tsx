@@ -19,7 +19,7 @@ const resourceCategories = [
 ];
 
 const defaultSettings = {
-  siteName: "NSUK Academic Resources",
+  siteName: "NSUK Edu-Archive",
   contactEmail: "",
   contactPhone: "",
   address: "Nasarawa State University, Keffi, Nigeria",

@@ -132,7 +132,7 @@ export const emptyBundle: DataBundle = {
   offerings: [],
   resources: [],
   settings: {
-    siteName: "NSUK Academic Resources",
+    siteName: "NSUK Edu-Archive",
     contactEmail: "",
     contactPhone: "",
     address: "Nasarawa State University, Keffi, Nigeria",
