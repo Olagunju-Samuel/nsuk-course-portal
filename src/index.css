@@ -41,3 +41,73 @@
     color: #0b2948;
   }
 }
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  background: #101820;
+  color: #dce5ee;
+}
+
+html[data-theme="dark"] [data-app-theme] {
+  background-color: #101820 !important;
+  color: #dce5ee;
+}
+
+html[data-theme="dark"] [class*="bg-white"],
+html[data-theme="dark"] [class*="bg-[#f"],
+html[data-theme="dark"] [class*="bg-[#e"],
+html[data-theme="dark"] [class*="bg-[#d"] {
+  background-color: #192635 !important;
+}
+
+html[data-theme="dark"] [class*="text-[#0b2948"],
+html[data-theme="dark"] [class*="text-[#102a45"],
+html[data-theme="dark"] [class*="text-[#132d48"],
+html[data-theme="dark"] [class*="text-[#182b40"],
+html[data-theme="dark"] [class*="text-[#24364b"],
+html[data-theme="dark"] [class*="text-[#243b52"] {
+  color: #e8edf3 !important;
+}
+
+html[data-theme="dark"] [class*="text-[#a07824"],
+html[data-theme="dark"] [class*="text-[#986f1d"],
+html[data-theme="dark"] [class*="text-[#9a7220"],
+html[data-theme="dark"] [class*="text-[#936c18"],
+html[data-theme="dark"] [class*="text-[#aa8129"] {
+  color: #f2c629 !important;
+}
+
+html[data-theme="dark"] [data-dark-role="department-name"] {
+  color: #ffe17a !important;
+}
+
+html[data-theme="dark"] [class*="text-[#7a8796"],
+html[data-theme="dark"] [class*="text-[#778495"],
+html[data-theme="dark"] [class*="text-[#758292"],
+html[data-theme="dark"] [class*="text-[#697789"],
+html[data-theme="dark"] [class*="text-[#6b7888"],
+html[data-theme="dark"] [class*="text-[#657386"],
+html[data-theme="dark"] [class*="text-[#667588"],
+html[data-theme="dark"] [class*="text-[#687789"],
+html[data-theme="dark"] [class*="text-[#8290a0"] {
+  color: #a9bacb !important;
+}
+
+html[data-theme="dark"] [class*="border-[#"] {
+  border-color: #344557 !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background-color: #192635;
+  color: #e6edf4;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #9aabba;
+}

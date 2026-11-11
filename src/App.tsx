@@ -1,12 +1,14 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import StudentSite from "./components/StudentSite";
 import { api } from "./lib/supabase";
+import logoUrl from "../logo.png";
 import { emptyBundle, type DataBundle } from "./types";
 
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
 
 export default function App() {
   const [admin, setAdmin] = useState(window.location.hash === "#admin");
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("nsuk-theme") === "dark");
   const [data, setData] = useState<DataBundle>(emptyBundle);
   const [loading, setLoading] = useState(true);
   const [publicError, setPublicError] = useState("");
@@ -22,6 +24,22 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? "dark" : "light";
+    localStorage.setItem("nsuk-theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
+
+  useEffect(() => {
+    let favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!favicon) {
+      favicon = document.createElement("link");
+      favicon.rel = "icon";
+      document.head.appendChild(favicon);
+    }
+    favicon.type = "image/png";
+    favicon.href = logoUrl;
   }, []);
 
   useEffect(() => {
@@ -64,10 +82,24 @@ export default function App() {
           </div>
         }
       >
-        <AdminPanel onExit={showStudent} onDataChange={loadPublicData} />
+        <AdminPanel
+          onExit={showStudent}
+          onDataChange={loadPublicData}
+          darkMode={darkMode}
+          onToggleTheme={() => setDarkMode((current) => !current)}
+        />
       </Suspense>
     );
   }
 
-  return <StudentSite data={data} loading={loading} error={publicError} onAdmin={showAdmin} />;
+  return (
+    <StudentSite
+      data={data}
+      loading={loading}
+      error={publicError}
+      onAdmin={showAdmin}
+      darkMode={darkMode}
+      onToggleTheme={() => setDarkMode((current) => !current)}
+    />
+  );
 }

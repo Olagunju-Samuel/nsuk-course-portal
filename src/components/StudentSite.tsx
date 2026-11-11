@@ -9,11 +9,14 @@ import {
   GraduationCap,
   LoaderCircle,
   Menu,
+  Moon,
   Search,
+  Sun,
   X,
 } from "lucide-react";
 import { api } from "../lib/supabase";
 import { formatBytes, formatDate, joinOfferings } from "../lib/data";
+import logoUrl from "../../logo.png";
 import type { DataBundle, JoinedOffering, Resource } from "../types";
 import { categoryLabels } from "../types";
 import { Badge, Button, EmptyState, Field, Input, Modal, Select } from "./ui";
@@ -25,11 +28,15 @@ export default function StudentSite({
   loading,
   error,
   onAdmin,
+  darkMode,
+  onToggleTheme,
 }: {
   data: DataBundle;
   loading: boolean;
   error: string;
   onAdmin: () => void;
+  darkMode: boolean;
+  onToggleTheme: () => void;
 }) {
   const offerings = useMemo(() => joinOfferings(data), [data]);
   const [page, setPage] = useState<Page>("home");
@@ -290,12 +297,12 @@ export default function StudentSite({
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa] text-[#182b40]">
+    <div className="min-h-screen bg-[#f7f8fa] text-[#182b40]" data-app-theme>
       <header className="sticky top-0 z-40 border-b border-[#dfe4e9] bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <button onClick={() => navigate("home")} className="flex items-center gap-3 text-left">
             <img
-              src="/nsuk-logo.svg"
+              src={logoUrl}
               alt="Nasarawa State University logo"
               className="h-11 w-11 rounded-xl border border-[#dfe6ee] bg-white object-contain p-1 shadow-sm"
             />
@@ -328,13 +335,25 @@ export default function StudentSite({
               </button>
             ))}
           </nav>
-          <button
-            className="rounded-lg p-2 text-[#0b2948] lg:hidden"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Open navigation"
-          >
-            {mobileOpen ? <X /> : <Menu />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#dce2e8] px-3 text-sm font-semibold text-[#405267] hover:bg-[#f2f4f7]"
+              aria-label={`Switch to ${darkMode ? "light" : "dark"} mode`}
+              title={`Switch to ${darkMode ? "light" : "dark"} mode`}
+            >
+              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              <span className="hidden sm:inline">{darkMode ? "Light mode" : "Dark mode"}</span>
+            </button>
+            <button
+              className="rounded-lg p-2 text-[#0b2948] lg:hidden"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Open navigation"
+            >
+              {mobileOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
         {mobileOpen && (
           <nav className="border-t border-[#e3e7ec] bg-white px-4 py-4 lg:hidden">
@@ -979,7 +998,9 @@ function DepartmentGrid({
               <Building2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-bold text-[#17304a]">{department.name}</h3>
+              <h3 className="font-bold text-[#17304a]" data-dark-role="department-name">
+                {department.name}
+              </h3>
               <p className="mt-1 text-xs text-[#738091]">{faculty?.name}</p>
               {department.description && (
                 <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#667588]">

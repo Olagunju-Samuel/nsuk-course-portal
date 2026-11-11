@@ -14,15 +14,18 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Moon,
   Pencil,
   Plus,
   Search,
   Settings as SettingsIcon,
+  Sun,
   Upload,
   UsersRound,
   X,
 } from "lucide-react";
 import { api, supabase } from "../lib/supabase";
+import logoUrl from "../../logo.png";
 import { formatBytes, formatDate, joinOfferings } from "../lib/data";
 import type {
   AcademicSession,
@@ -61,9 +64,13 @@ const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
 export default function AdminPanel({
   onExit,
   onDataChange,
+  darkMode,
+  onToggleTheme,
 }: {
   onExit: () => void;
   onDataChange: () => void;
+  darkMode: boolean;
+  onToggleTheme: () => void;
 }) {
   const [session, setSession] = useState<Session | null>(null);
   const [configured, setConfigured] = useState<boolean | null>(null);
@@ -139,6 +146,8 @@ export default function AdminPanel({
           setupError={setupError}
           onExit={onExit}
           notify={notify}
+          darkMode={darkMode}
+          onToggleTheme={onToggleTheme}
         />
         {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       </>
@@ -146,14 +155,14 @@ export default function AdminPanel({
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7f9] text-[#182b40]">
+    <div className="min-h-screen bg-[#f5f7f9] text-[#182b40]" data-app-theme>
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#08243f] text-white transition-transform lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
           <div className="flex items-center gap-3">
             <img
-              src="/nsuk-logo.svg"
+              src={logoUrl}
               alt="Nasarawa State University logo"
               className="h-10 w-10 rounded-lg border border-white/10 bg-white object-contain p-1"
             />
@@ -219,9 +228,21 @@ export default function AdminPanel({
               </p>
             </div>
           </div>
-          <div className="hidden text-right sm:block">
-            <p className="text-xs font-semibold text-[#35495e]">{session.user.email}</p>
-            <p className="text-[11px] text-[#8290a0]">Authorized administrator</p>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#dce2e8] px-3 text-sm font-semibold text-[#405267] hover:bg-[#f2f4f7]"
+              aria-label={`Switch to ${darkMode ? "light" : "dark"} mode`}
+              title={`Switch to ${darkMode ? "light" : "dark"} mode`}
+            >
+              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              <span className="hidden sm:inline">{darkMode ? "Light mode" : "Dark mode"}</span>
+            </button>
+            <div className="hidden text-right sm:block">
+              <p className="text-xs font-semibold text-[#35495e]">{session.user.email}</p>
+              <p className="text-[11px] text-[#8290a0]">Authorized administrator</p>
+            </div>
           </div>
         </header>
         <main className="p-4 sm:p-6 lg:p-8">
@@ -267,11 +288,15 @@ function AuthScreen({
   setupError,
   onExit,
   notify,
+  darkMode,
+  onToggleTheme,
 }: {
   configured: boolean;
   setupError: string;
   onExit: () => void;
   notify: (message: string, type?: "success" | "error") => void;
+  darkMode: boolean;
+  onToggleTheme: () => void;
 }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [busy, setBusy] = useState(false);
@@ -297,7 +322,7 @@ function AuthScreen({
       <div className="hidden w-[44%] flex-col justify-between bg-[#08243f] p-12 text-white lg:flex">
         <div className="flex items-center gap-3">
           <img
-            src="/nsuk-logo.svg"
+            src={logoUrl}
             alt="Nasarawa State University logo"
             className="h-12 w-12 rounded-xl border border-white/10 bg-white object-contain p-2"
           />
@@ -322,7 +347,17 @@ function AuthScreen({
           Administrator operations require authenticated server authorization.
         </p>
       </div>
-      <div className="flex flex-1 items-center justify-center p-5">
+      <div className="relative flex flex-1 items-center justify-center p-5" data-app-theme>
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          className="absolute right-5 top-5 inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#dce2e8] bg-white px-3 text-sm font-semibold text-[#405267] hover:bg-[#f2f4f7]"
+          aria-label={`Switch to ${darkMode ? "light" : "dark"} mode`}
+          title={`Switch to ${darkMode ? "light" : "dark"} mode`}
+        >
+          {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          <span className="hidden sm:inline">{darkMode ? "Light mode" : "Dark mode"}</span>
+        </button>
         <div className="w-full max-w-md rounded-2xl border border-[#e0e5ea] bg-white p-7 shadow-xl sm:p-9">
           <button
             onClick={onExit}

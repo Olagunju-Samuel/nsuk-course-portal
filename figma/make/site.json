@@ -1,4 +1,7 @@
 {
+  "icons": {
+    "icon": ""
+  },
   "description": "Helps Nasarawa State University students find course details, lecture notes, reading materials, syllabi, and past exam questions to prepare for classes and exams.",
   "robots": {
     "index": false
