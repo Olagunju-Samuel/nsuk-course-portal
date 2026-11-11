@@ -1755,10 +1755,12 @@ function ResourceForm({
     (item) => item.level === academic.level && item.semester === academic.semester && item.course.id === academic.courseId,
   );
   const current = availableOfferings.find((item) => item.session.id === academic.sessionId);
+  const normalizeCourseMatch = (text: string) => text.trim().toLowerCase().replace(/\s+/g, " ");
   const matchingCourseOfferings = current
     ? offerings.filter(
       (item) =>
-        item.course.code.toLowerCase() === current.course.code.toLowerCase() &&
+        (normalizeCourseMatch(item.course.code) === normalizeCourseMatch(current.course.code) ||
+          normalizeCourseMatch(item.course.title) === normalizeCourseMatch(current.course.title)) &&
         item.level === current.level &&
         item.semester === current.semester &&
         item.session.id === current.session.id,
@@ -1882,13 +1884,13 @@ function ResourceForm({
               </Select>
             </Field>
           </div>
-          {!value && current && matchingCourseOfferings.length > 1 && (
+          {!value && current && (
             <div className="mt-4 rounded-lg border border-[#d8dee6] p-4">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h4 className="text-sm font-bold">Departments to receive these PDFs</h4>
                   <p className="mt-1 text-xs text-[#697789]">
-                    Select departments that offer {current.course.code} in the same level, semester, and session.
+                    Select departments offering {current.course.code} ({current.level}, {current.semester}, {current.session.name}).
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -1920,6 +1922,7 @@ function ResourceForm({
                       }}
                     />
                     <span>{item.department.name}</span>
+                    <span className="text-xs text-[#697789]">{item.faculty.name}</span>
                     {item.publicationStatus !== "published" && (
                       <span className="text-xs text-[#a16207]">(course unpublished)</span>
                     )}
@@ -1929,6 +1932,11 @@ function ResourceForm({
               <p className="mt-2 text-xs text-[#697789]">
                 {selectedOfferings.length} department{selectedOfferings.length === 1 ? "" : "s"} selected
               </p>
+              {matchingCourseOfferings.length === 1 && (
+                <p className="mt-2 text-xs text-amber-700">
+                  No other matching department offering was found. Add this course with the same course code or title, level, semester, and session in another department first; it will then appear here.
+                </p>
+              )}
             </div>
           )}
           {!value && academic.courseId && !availableOfferings.length && (
